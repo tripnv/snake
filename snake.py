@@ -1,116 +1,108 @@
-import math
-import time
-import numpy as np
-import curses 
+from tkinter import *
 
-class Point:
-    """ Coordinates of a snake unit """
+action_space_dir = {
+        "UP": (0, -1),
+        "DOWN":(0,1),
+        "LEFT":(-1,0),
+        "RIGHT":(1,0)
+        }
+
+game_states = {
+        "ALIVE":1,
+        "DEAD":0
+        }
+
+class Coord:
+
     def __init__(self, x, y):
         self.x = x
         self.y = y
 
+class Environment():
+
+    def __init__(self, pseudo_grid_size):
+        #Environment attributes
+        window = Tk()
+        self.gridsize = pseudo_grid_size + 2
+        self.action_range = pseudo_grid_size
+        self.unit_size = 30
+        self.unit_space = 0
+        self.time_unit = 500
+        height = self.gridsize * self.unit_size + (self.gridsize-1) * self.unit_space
+
+        self.game_state = 1
+        self.canvas = Canvas(window, bg = "white", height = height,  width = height)
+        self.draw_borders(self.gridsize, height, self.unit_size, self.unit_space)
+        self.snake = Snake(1,1)
+        self.render_snake()
+
+        self.canvas.pack()
+        self.action()
+
+        window.mainloop()
+
+    def draw_borders(self, grid_size, height, unit_size, unit_space):
+
+        x_index = 0
+        y_index = 0
+
+        while x_index < height:
+            self.canvas.create_rectangle(x_index, y_index, x_index + unit_size, y_index + unit_size,
+                    fill = "grey", outline = "white")
+            self.canvas.create_rectangle(x_index, height - y_index,
+                    x_index + unit_size, height - y_index - unit_size,
+                    fill = "grey", outline = "white" )
+
+            x_index = x_index + unit_size + unit_space
+
+        x_index = 0
+        y_index = 0
+
+        while y_index < height:
+            self.canvas.create_rectangle(x_index, y_index,
+                    x_index+unit_size, y_index + unit_size, fill = "grey", outline = "white")
+
+            self.canvas.create_rectangle(height - x_index, y_index,
+                    height - x_index - unit_size, y_index + unit_size, fill = "grey", outline = "white")
+
+            y_index = y_index + unit_size + unit_space
+
+    def render_snake(self):
+        return self.canvas.create_rectangle(\
+                self.snake.head.x * self.unit_size + self.unit_space,
+                self.snake.head.y * self.unit_size + self.unit_space,
+                self.snake.head.x * self.unit_size + self.unit_size + self.unit_space,
+                self.snake.head.y * self.unit_size + self.unit_size + self.unit_space,
+                                            fill = "green", outline = "white")
+    def action(self):
+        self.canvas.after(self.time_unit, self.action)
+        if self.game_state:
+            h = self.render_snake()
+            self.snake.update_head_position(action_space_dir["RIGHT"])
 
 class Snake:
-    """ Contains head and tail """
-    def __init__(self):
-        self.head = Point(1,1)
-        self.head_direction = "DOWN"
-        self.tail = []
+    def __init__(self, x, y):
+        self.init_head(x,y)
+        self.init_tail()
 
-    def set_direction(self, pressed_key):
-        
-        if pressed_key == 126:
-            self.head_direction = "UP"
-        if pressed_key == 125:
-            self.head_direction = "DOWN"
-        if pressed_key == 123:
-            self.head_direction = "LEFT"
-        if pressed_key == 124:
-            self.head_direction = "RIGHT"
-        
+    def init_head(self, x, y):
+        self.head = Coord(x,y)
 
-        
-    def update_snake(self):
-        current_dir = action_space_dir[self.head_direction]
-        x_dir, y_dir = current_dir[0], current_dir[1]
-        
-        #update snake head 
+    def init_tail(self):
+        #list of unit coordinates
+        #each unit takes the place of the previous unit
+        #special case: only head
+        pass
+
+    def update_head_position(self, direction):
+        x_dir, y_dir = direction[0], direction[1]
         self.head.x += x_dir
         self.head.y += y_dir
-        
-        #update snake tail
-        
 
-action_space_dir = {
-        "UP": (-1,0),
-        "DOWN": (1,0),
-        "LEFT": (0,1),
-        "RIGHT": (0,-1)
-        }
+    def render(self):
+        pass
 
-game_states = {
-        "ALIVE": 1,
-        "GAME OVER": 0
-        }
-
-class Environment:
-    """The board itself"""
-    def __init__(self, board_size = 10):
-        self.board_size = board_size
-        self.snake = Snake()
-        self.state = 1
-        self.board = self.reset_board()
-        self.board[self.snake.head.x, self.snake.head.y] = 1
-
-    def update_board(self):
-        """given a point and direction return the next point"""
-        
-        self.board[self.snake.head.x, self.snake.head.y] = 0
-        self.snake.update_snake()
-        if self.board[self.snake.head.x, self.snake.head.x] != 0:
-            self.state = 0
-        else:
-            self.board[self.snake.head.x, self.snake.head.y] = 1
-
-
-    def reset_board(self):
-        """ Initialize board environment and set the borders """
-        board = np.zeros((self.board_size, self.board_size))
-        board[:1,:] = -1
-        board[-1:, :] = -1
-        board[:, :1] = -1
-        board[:, -1:] = -1
-        return board
-
-    def board_to_string(self):
-        return np.array2string(self.board)
-
-    def __repr__(self):
-        print(self.board)
-
-def main(screen):
-    #screen.timeout(0)
-    screen.nodelay(1)
-    curses.noecho()
-    env = Environment()
-    print("\033c")  
-    
-    while True:
-    
-        if env.state == False:
-            print("GAME_OVER")
-            time.sleep(10)
-            break
-
-        pressed_key = screen.getch()
-        if pressed_key != -1:
-            env.snake.set_direction(pressed_key)
-        if pressed_key == 113:
-            break
-        screen.addstr(0,0, env.board_to_string())
-        #screen.refresh()
-        env.update_board()
-        time.sleep(1)
-
+def main():
+    env = Environment(10)
 if __name__ == "__main__":
-    curses.wrapper(main)
+    main()
