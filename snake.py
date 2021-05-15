@@ -1,10 +1,9 @@
-from tkinter import *
-
+import tkinter as tk
 action_space_dir = {
-        "UP": (0, -1),
-        "DOWN":(0,1),
-        "LEFT":(-1,0),
-        "RIGHT":(1,0)
+        "Up": (0, -1),
+        "Down":(0,1),
+        "Left":(-1,0),
+        "Right":(1,0)
         }
 
 game_states = {
@@ -22,24 +21,30 @@ class Environment():
 
     def __init__(self, pseudo_grid_size):
         #Environment attributes
-        window = Tk()
+        self.window = tk.Tk()
         self.gridsize = pseudo_grid_size + 2
         self.action_range = pseudo_grid_size
         self.unit_size = 30
         self.unit_space = 0
         self.time_unit = 500
-        height = self.gridsize * self.unit_size + (self.gridsize-1) * self.unit_space
+        self.height = self.gridsize * self.unit_size + (self.gridsize-1) * self.unit_space
 
         self.game_state = 1
-        self.canvas = Canvas(window, bg = "white", height = height,  width = height)
-        self.draw_borders(self.gridsize, height, self.unit_size, self.unit_space)
+        self.canvas = tk.Canvas(self.window, bg = "white", height = self.height,  width = self.height)
         self.snake = Snake(1,1)
         self.render_snake()
 
         self.canvas.pack()
         self.action()
 
-        window.mainloop()
+        self.window.bind("<Up>", self.assign_direction)
+        self.window.bind("<Down>",self.assign_direction)
+        self.window.bind("<Left>", self.assign_direction)
+        self.window.bind("<Right>", self.assign_direction)
+
+        self.window.mainloop()
+
+
 
     def draw_borders(self, grid_size, height, unit_size, unit_space):
 
@@ -74,14 +79,35 @@ class Environment():
                 self.snake.head.x * self.unit_size + self.unit_size + self.unit_space,
                 self.snake.head.y * self.unit_size + self.unit_size + self.unit_space,
                                             fill = "green", outline = "white")
+    def check_game_state(self):
+        #border check
+        if self.snake.head.x > self.action_range + 1 or self.snake.head.y > self.action_range + 1:
+            self.game_state = 0
+        elif self.snake.head.x < 1 or self.snake.head.y < 1:
+            self.game_state = 0
+
+        #self check
     def action(self):
-        self.canvas.after(self.time_unit, self.action)
+        self.canvas.delete(tk.ALL)
         if self.game_state:
-            h = self.render_snake()
-            self.snake.update_head_position(action_space_dir["RIGHT"])
+            self.canvas.after(self.time_unit, self.action)
+            self.draw_borders(self.gridsize, self.height, self.unit_size, self.unit_space)
+            self.render_snake()
+            self.snake.update_head_position()
+            self.check_game_state()
+        else:
+            self.canvas.create_text(self.height/2, self.height/2, text = 'GAME OVER')
+            self.canvas.update()
+            return 0
+
+    def assign_direction(self, event):
+        new_direction = event.keysym
+        self.snake.direction = new_direction
+
 
 class Snake:
     def __init__(self, x, y):
+        self.direction = "Right"
         self.init_head(x,y)
         self.init_tail()
 
@@ -94,8 +120,9 @@ class Snake:
         #special case: only head
         pass
 
-    def update_head_position(self, direction):
-        x_dir, y_dir = direction[0], direction[1]
+    def update_head_position(self):
+        direction_tuple = action_space_dir[self.direction]
+        x_dir, y_dir = direction_tuple[0], direction_tuple[1]
         self.head.x += x_dir
         self.head.y += y_dir
 
@@ -103,6 +130,6 @@ class Snake:
         pass
 
 def main():
-    env = Environment(10)
+    env = Environment(20)
 if __name__ == "__main__":
     main()
