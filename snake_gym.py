@@ -3,7 +3,7 @@ import time
 import gym
 import numpy as np
 import cv2
-import matplotlib.pyplot as plt
+
 
 action_space_dir = {
         "Up": (0,-1),
@@ -13,12 +13,6 @@ action_space_dir = {
         }
 action_space_list = ["Up", "Down", "Left", "Right"]
 
-action_space_ids = {
-        0:"Up",
-        1:"Down",
-        2:"Left",
-        3:"Right",
-        }
 
 game_states = {
         "ALIVE":1,
@@ -44,7 +38,14 @@ class Unit:
         return [self.x, self.y]
 
 class Environment(gym.Env):
-
+    """ Function guide from: https://github.com/openai/gym/blob/master/gym/core.py """ 
+    action_space_ids = {
+        0:"Up",
+        1:"Down",
+        2:"Left",
+        3:"Right",
+        }
+    metadata = {'render.modes': ['human', 'rgb_array', 'ansi']}
     def __init__(self):
         super(Environment).__init__()
 
@@ -61,71 +62,114 @@ class Environment(gym.Env):
                 low = 0,
                 high = 255,
                 shape = (self.height, self.height, 3),
-                dtype = np.float16)
+                dtype = np.uint8)
 
         self.action_space = gym.spaces.Discrete(4,)
 
 
-        self.reset() # is this the way? - Probably not
 
 
     def reset(self):
-
+        
 
         #Environment variables
         self.score = 0
         self.game_state = 1
 
         #Elements within the environment
-        self.canvas = np.ones(self.observation_shape)
+        self.canvas = np.ones(self.observation_shape, dtype = np.uint8)
         self.snake = Snake()
         self.food = Food()
         self.tail_copy = None
-        self.reward = 0
-        self.game_loop()
-
-        #should  return observation
-        return self.observation_space
+        self.add_elements_to_canvas()
+        #should  return observation -> the initial state
+        return self.canvas
 
     def close(self):
         cv2.destroyAllWindows()
 
-    def step(self, direction = random.choice(action_space_list)):
+    def step(self, direction):
+        
+        """Run one timestep of the environment's dynamics. When end of
+        episode is reached, you are responsible for calling `reset()`
+        to reset this environment's state.
+        Accepts an action and returns a tuple (observation, reward, done, info).
+        Args:
+            action (object): an action provided by the agent
+        Returns:
+            observation (object): agent's observation of the current environment
+            reward (float) : amount of reward returned after previous action
+            done (bool): whether the episode has ended, in which case further step() calls will return undefined results
+            info (dict): contains auxiliary diagnostic information (helpful for debugging, and sometimes learning)
+        """
+
+        reward = 1
+        info = {}
+
+        #clear canvas 
+        self.canvas = np.ones(self.observation_shape, dtype = np.uint8)
 
         #choose direction
-        self.snake.direction = direction
+        assert direction in self.action_space_ids, 'Invalid action'
+        self.snake.direction = self.action_space_ids[direction]
         self.snake.update_snake()
-
-        if self.check_game_state():
-            pass
-            #return self.reward + 1
+        self.add_elements_to_canvas()
+        
+        #check gamestate
+        if self.check_food_collision():
+            reward = 10
+        
+        if self.check_game_state() == False:
+            reward = -10
+            return self.canvas, reward, True, info #spaceholder for info 
 
         #should return  observation, reward, done, info
+        return self.canvas, reward, False, info 
 
-    def game_loop(self):
-        while(self.game_state):
-            self.step()
-            self.add_elements_to_canvas()
-            self.render()
 
-            if self.food.position.x == self.snake.head.x and self.food.position.y == self.snake.head.y:
-                occ_sq = self.get_occupied_squares()
-                self.food.position = self.food.generate_food(occ_sq)
-                self.snake.increase_tail()
-                self.reward += 10
+    def check_food_collision(self):
+        if self.food.position.x == self.snake.head.x and self.food.position.y == self.snake.head.y:
+            occ_sq = self.get_occupied_squares()
+            self.food.position = self.food.generate_food(occ_sq)
+            self.snake.increase_tail()
+            return True
+        else:
+            return False
 
-            self.canvas = np.ones([self.height, self.height,3])
+#     def game_loop(self):
+        # while(self.game_state):
+            # self.step()
+            # self.add_elements_to_canvas()
+            # self.render()
+            
+            # self.canvas = np.ones([self.height, self.height,3])
 
     def add_elements_to_canvas(self):
         self.draw_snake()
         self.draw_food()
 
-    def render(self, mode = "human"):
-        assert mode in ['human', 'console']
+    def render(self, mode = "ansi"):
+
+        """ 
+        - human: render to the current display or terminal and
+          return nothing. Usually for human consumption.
+        - rgb_array: Return an numpy.ndarray with shape (x, y, 3),
+          representing RGB values for an x-by-y pixel image, suitable
+          for turning into a video.
+        - ansi: Return a string (str) or StringIO.StringIO containing a
+          terminal-style text representation. The text can include newlines
+          and ANSI escape sequences (e.g. for colors).
+        """
+        assert mode in ['human', 'rgb_array', 'ansi']
+        
         if mode == 'human':
             cv2.imshow("canvas", self.canvas)
             cv2.waitKey(1000)
-        elif mode == 'console':
+
+        elif mode == 'rgb_array':
+            return self.canvas
+
+        elif mode == 'ansi':
             print("\n")
             print("Snake head: {}, tail: {}".format(self.snake.head.as_list(),self.snake.tail))
 
@@ -135,21 +179,6 @@ class Environment(gym.Env):
             print("\n")
             print("Score: {}".format(self.snake.length))
             print("------------------")
-        #self.draw_borders()
-
-
-        #  font = cv2.FONT_HERSHEY_SIMPLEX
-        #  text_pos = (10,0)
-        #  text_scale = 1
-        #  text_color = (255,0,0)
-        #  line_type = 2
-
-        #  cv2.putText(self.canvas, str(self.score),
-            #  text_pos,
-            #  font,
-            #  text_scale,
-            #  text_color,
-            #  line_type)
 
 
     def draw_borders(self):
@@ -220,10 +249,10 @@ class Environment(gym.Env):
         #border check
         if self.snake.head.x > self.action_range  or self.snake.head.y > self.action_range:
             self.game_state = 0
-            return True
+            return False 
         elif self.snake.head.x < 1 or self.snake.head.y < 1:
             self.game_state = 0
-            return True
+            return False 
         #self check
         if [self.snake.head.x, self.snake.head.y] in self.snake.tail:
             self.game_state = 0
@@ -311,8 +340,10 @@ class Food:
             if x not in occupied_squares:
                 return Unit(x[0], x[1])
 
+# def main():
+    # env = Environment()
+    # initial_state = env.reset()
+    # env.render(mode = "console")
 
-def main():
-    env = Environment()
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+    # main()
