@@ -121,6 +121,7 @@ class Environment(gym.Env):
         
         if self.check_game_state() == False:
             reward = -10
+            self.reset()
             return self.canvas, reward, True, info #spaceholder for info 
 
         #should return  observation, reward, done, info
