@@ -75,9 +75,9 @@ class Environment(gym.Env):
         #Environment variables
         self.score = 0
         self.game_state = 1
-
+        self.done = False
         #Elements within the environment
-        self.canvas = np.ones(self.observation_shape, dtype = np.uint8)
+        self.canvas = np.ones(self.observation_shape, dtype = np.float32)
         self.snake = Snake()
         self.food = Food()
         self.tail_copy = None
@@ -104,11 +104,11 @@ class Environment(gym.Env):
         """
 
         reward = 1
+        done = False
         info = {}
-
+        
         #clear canvas 
-        self.canvas = np.ones(self.observation_shape, dtype = np.uint8)
-
+        self.canvas = np.ones(self.observation_shape, dtype = np.float32)
         #choose direction
         assert direction in self.action_space_ids, 'Invalid action'
         self.snake.direction = self.action_space_ids[direction]
@@ -121,11 +121,11 @@ class Environment(gym.Env):
         
         if self.check_game_state() == False:
             reward = -10
-            self.reset()
-            return self.canvas, reward, True, info #spaceholder for info 
+            done = True
+            return self.canvas, reward, done, info #spaceholder for info 
 
         #should return  observation, reward, done, info
-        return self.canvas, reward, False, info 
+        return self.canvas, reward, self.done, info 
 
 
     def check_food_collision(self):
@@ -344,7 +344,9 @@ class Food:
 # def main():
     # env = Environment()
     # initial_state = env.reset()
-    # env.render(mode = "console")
+    # while(env.done == False):
+        # env.step(env.action_space.sample())
+        # env.render(mode = "human")
 
 # if __name__ == "__main__":
     # main()
