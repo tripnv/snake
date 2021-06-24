@@ -83,7 +83,7 @@ class snake_gym(gym.Env):
         return self.canvas, reward, self.done, info
 
     def render(self, mode = 'human'):
-        self.env.render(mode)
+        return self.env.render(mode)
     
     @property
     def unwrapped(self):
@@ -110,21 +110,19 @@ class snake_gym(gym.Env):
         return False
 
 # Test functionalities
-# def main():
-    # env = snake_gym()
-    # init_obs = env.reset()
+def main():
+    env = snake_gym()
+    init_obs = env.reset()
+    for i in range(1000):
+        if env.env.game_state <= 0:
+            print('\ngame over')
+            print('\n Iteration: {}'.format(i))
+            print('\n Game state: {}'.format(env.env.game_state))
+            print('\n Last coordinates: {}'.format(env.env.snake.head.as_list()))
+            print(env.render(mode = 'rgb_array'))
 
-    # for i in range(1000):
-        # if env.env.game_state <= 0:
-            # print('\ngame over')
-            # print('\n Iteration: {}'.format(i))
-            # print('\n Game state: {}'.format(env.env.game_state))
-            # print('\n Last coordinates: {}'.format(env.env.snake.head.as_list()))
-            # print()
+            break
+        env.step(env.action_space.sample())
 
-            # break
-        # env.step(env.action_space.sample())
-        # env.render('human')
-
-# if __name__ == '__main__':
-    # main()
+if __name__ == '__main__':
+    main()
