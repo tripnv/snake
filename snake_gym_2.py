@@ -110,19 +110,19 @@ class snake_gym(gym.Env):
         return False
 
 # Test functionalities
-def main():
-    env = snake_gym()
-    init_obs = env.reset()
-    for i in range(1000):
-        if env.env.game_state <= 0:
-            print('\ngame over')
-            print('\n Iteration: {}'.format(i))
-            print('\n Game state: {}'.format(env.env.game_state))
-            print('\n Last coordinates: {}'.format(env.env.snake.head.as_list()))
-            print(env.render(mode = 'rgb_array'))
+# def main():
+    # env = snake_gym()
+    # init_obs = env.reset()
+    # for i in range(1000):
+        # if env.env.game_state <= 0:
+            # print('\ngame over')
+            # print('\n Iteration: {}'.format(i))
+            # print('\n Game state: {}'.format(env.env.game_state))
+            # print('\n Last coordinates: {}'.format(env.env.snake.head.as_list()))
+            # print(env.render(mode = 'rgb_array'))
 
-            break
-        env.step(env.action_space.sample())
+            # break
+        # env.step(env.action_space.sample())
 
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+    # main()
