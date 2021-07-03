@@ -28,7 +28,7 @@ class SnakeGym(gym.Env):
     
 
     def __init__(self):
-        super(snake_gym, self).__init__()
+        super(SnakeGym, self).__init__()
         self.env = snake_2.Environment()
         self.observation_shape = (self.env.height, self.env.height,3)   
         self.observation_space = gym.spaces.Box(low = 0,
