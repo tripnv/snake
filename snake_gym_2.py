@@ -5,7 +5,7 @@ import random
 import cv2
 
 
-class snake_gym(gym.Env):
+class SnakeGym(gym.Env):
     
     """ Env guide from: https://github.com/openai/gym/blob/master/gym/core.py """ 
 
