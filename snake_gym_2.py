@@ -50,9 +50,8 @@ class snake_gym(gym.Env):
             observation (object): the initial observation.
         """
         self.env.reset()
-        self.canvas = self.env.canvas
         self.done = False 
-        return self.canvas
+        return self.env.canvas
     
     def step(self, action):
         """Run one timestep of the environment's dynamics. When end of
@@ -80,7 +79,7 @@ class snake_gym(gym.Env):
         elif status == 2:
             reward = 10
         info = {} #empty for now
-        return self.canvas, reward, self.done, info
+        return self.env.canvas, reward, self.done, info
 
     def render(self, mode = 'human'):
         return self.env.render(mode)
