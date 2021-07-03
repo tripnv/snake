@@ -34,7 +34,7 @@ class snake_gym(gym.Env):
         self.observation_space = gym.spaces.Box(low = 0,
                 high = 255,
                 shape = self.observation_shape,
-                dtype = np.float32)
+                dtype = np.uint8)
         self.action_space = gym.spaces.Discrete(4)
         self.reset()
     
