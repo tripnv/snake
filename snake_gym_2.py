@@ -4,6 +4,9 @@ import numpy as np
 import random 
 import cv2
 
+#pre-defined reward range
+
+
 
 class SnakeGym(gym.Env):
     
@@ -23,9 +26,13 @@ class SnakeGym(gym.Env):
     """
 
     metadata = {'render.modes': ['human', 'ansi', 'rgb_array']}
-    reward_range = (-float('inf'), float('inf'))
     spec = None
-    
+    reward_range = {
+        'alive':-0.01,
+        'died':-1,
+        'ate':1,
+        'won':10
+        }  
 
     def __init__(self):
         super(SnakeGym, self).__init__()
@@ -72,12 +79,15 @@ class SnakeGym(gym.Env):
 
         status = self.env.update_environment(action)
         if status == 0:
-            reward = -10
+            reward = self.reward_range['died'] 
             self.done = True
         elif status == 1:
-            reward = 1
+            reward = self.reward_range['alive']
         elif status == 2:
-            reward = 10
+            reward = self.reward_range['ate']
+        elif status == 3:
+            reward = self.reward_range['won']
+            self.done = True
         info = {} #empty for now
         return self.env.canvas, reward, self.done, info
 
@@ -109,19 +119,28 @@ class SnakeGym(gym.Env):
         return False
 
 # Test functionalities
-# def main():
-    # env = snake_gym()
-    # init_obs = env.reset()
-    # for i in range(1000):
-        # if env.env.game_state <= 0:
-            # print('\ngame over')
-            # print('\n Iteration: {}'.format(i))
-            # print('\n Game state: {}'.format(env.env.game_state))
-            # print('\n Last coordinates: {}'.format(env.env.snake.head.as_list()))
-            # print(env.render(mode = 'rgb_array'))
+def main():
+    
+    env = SnakeGym()
+    #if necessary reward_range can be modified
+    alt_reward_range = {
+        'alive':1,
+        'died':-2,
+        'won':10,
+        'ate':3
+        }
+    env.reward_range = alt_reward_range
+    init_obs = env.reset()
+    last_reward = -1
+    for i in range(100):
+        _, last_reward, _, _ =  env.step(env.action_space.sample())
+        env.render(mode = 'human')
+    
+    print('\n Iteration: {}'.format(i))
+    print('\n Game state: {}'.format(env.env.game_state))
+    print('\n Last coordinates: {}'.format(env.env.snake.head.as_list()))
+    print('\n Snake length:{}'.format(env.env.snake.length))
+    print('\n Last reward: {}'.format(last_reward))
 
-            # break
-        # env.step(env.action_space.sample())
-
-# if __name__ == '__main__':
-    # main()
+if __name__ == '__main__':
+    main()

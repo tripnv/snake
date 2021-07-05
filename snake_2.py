@@ -10,9 +10,8 @@ action_space_dir = {
         "Left":(-1,0),
         "Right":(1,0)
         }
+
 action_space_list = ["Up", "Down", "Left", "Right"]
-
-
 
 COLORS = {
     "GRAY":(225,225,225),
@@ -43,6 +42,7 @@ class Environment:
         }
     
     game_states = {
+        "WON":3,
         "ATE":2,
         "ALIVE":1,
         "DEAD":0,
@@ -67,7 +67,6 @@ class Environment:
         
 
         #Environment variables
-        self.score = 0
         self.game_state = self.game_states['ALIVE'] 
         #Elements within the environment
         self.snake = Snake()
@@ -115,6 +114,8 @@ class Environment:
             self.food.position = self.food.generate_food(occ_sq)
             self.snake.increase_tail()
             self.game_state = self.game_states["ATE"]
+            if self.snake.length == self.gridsize * self.gridsize:
+                self.game_state = self.game_states['WON']
 
     def draw_to_canvas(self):
         self.draw_snake()
