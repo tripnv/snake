@@ -4,7 +4,7 @@ import numpy as np
 import random 
 import cv2
 
-#pre-defined reward range
+
 
 
 
