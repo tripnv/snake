@@ -1,8 +1,7 @@
 import random
-import time
 import numpy as np
 import cv2
-
+from itertools import permutations
 
 action_space_dir = {
         "Up": (0,-1),
@@ -70,7 +69,8 @@ class Environment:
         self.game_state = self.game_states['ALIVE'] 
         #Elements within the environment
         self.snake = Snake()
-        self.food = Food()
+        empty_squares = self.get_empty_squares()
+        self.food = Food(empty_squares)
         self.tail_copy = None
 
         self.canvas = np.ones((self.height, self.height, 3), dtype = np.float32)
@@ -110,8 +110,8 @@ class Environment:
 
     def check_food_collision(self):
         if self.food.position.x == self.snake.head.x and self.food.position.y == self.snake.head.y:
-            occ_sq = self.get_occupied_squares()
-            self.food.position = self.food.generate_food(occ_sq)
+            empty_squares = self.get_empty_squares()
+            self.food.position = self.food.generate_food(empty_squares)
             self.snake.increase_tail()
             self.game_state = self.game_states["ATE"]
             if self.snake.length == self.gridsize * self.gridsize:
@@ -120,6 +120,15 @@ class Environment:
     def draw_to_canvas(self):
         self.draw_snake()
         self.draw_food()
+
+    def create_matrix_repr(self):
+        board = np.zeros((self.gridsize, self.gridsize), dtype = np.uint16)
+        #specify snake head 
+        board[self.snake.head.x, self.snake.head.y] = 1
+
+        for t_unit in self.snake.tail:
+            board[t_unit[0], t_unit[1]] = 2
+        return board
 
     def render(self, mode = "ansi"):
 
@@ -150,42 +159,42 @@ class Environment:
             print("------------------")
 
 
-    def draw_borders(self):
-        #explicit borders has been removed
-        x_index = 0
-        y_index = 0
-        while x_index < self.height:
+    # def draw_borders(self):
+        # #explicit borders has been removed
+        # x_index = 0
+        # y_index = 0
+        # while x_index < self.height:
 
-            self.cavas = cv2.rectangle(
-                   self.canvas,
-                   (x_index,y_index),
-                   (x_index + self.unit_size, y_index + self.unit_size),
-                   color = COLORS["GRAY"], thickness = -1
-                   )
-            self.cavas = cv2.rectangle(
-                   self.canvas,
-                   (x_index,self.height - y_index),
-                   (x_index + self.unit_size, self.height - y_index - self.unit_size),
-                   color = COLORS["GRAY"], thickness = -1
-                   )
-            x_index =  x_index + self.unit_size
+            # self.cavas = cv2.rectangle(
+                   # self.canvas,
+                   # (x_index,y_index),
+                   # (x_index + self.unit_size, y_index + self.unit_size),
+                   # color = COLORS["GRAY"], thickness = -1
+                   # )
+            # self.cavas = cv2.rectangle(
+                   # self.canvas,
+                   # (x_index,self.height - y_index),
+                   # (x_index + self.unit_size, self.height - y_index - self.unit_size),
+                   # color = COLORS["GRAY"], thickness = -1
+                   # )
+            # x_index =  x_index + self.unit_size
 
-        x_index = 0
-        y_index = 0
+        # x_index = 0
+        # y_index = 0
 
-        while x_index < self.height:
-            self.cavas = cv2.rectangle(
-                   self.canvas,
-                   (x_index,y_index),
-                   (x_index + self.unit_size, y_index + self.unit_size),
-                   color = COLORS["GRAY"], thickness = -1
-                   )
-            self.cavas = cv2.rectangle(
-                   self.canvas,
-                   (self.height - x_index, y_index),
-                   (self.height - x_index - self.unit_size, y_index + self.unit_size),
-                   color = COLORS["GRAY"], thickness = -1)
-            y_index = y_index + self.unit_size
+        # while x_index < self.height:
+            # self.cavas = cv2.rectangle(
+                   # self.canvas,
+                   # (x_index,y_index),
+                   # (x_index + self.unit_size, y_index + self.unit_size),
+                   # color = COLORS["GRAY"], thickness = -1
+                   # )
+            # self.cavas = cv2.rectangle(
+                   # self.canvas,
+                   # (self.height - x_index, y_index),
+                   # (self.height - x_index - self.unit_size, y_index + self.unit_size),
+                   # color = COLORS["GRAY"], thickness = -1)
+            # y_index = y_index + self.unit_size
 
 
 
@@ -229,11 +238,13 @@ class Environment:
         elif direction == "Left":
             return "Right"
 
-    def get_occupied_squares(self):
-        occ_squares = []
-        occ_squares.append(self.snake.head.as_list())
-        occ_squares.extend(self.snake.tail)
-        return occ_squares
+    def get_empty_squares(self):
+        # occ_squares = []
+        # occ_squares.append(self.snake.head.as_list())
+        # occ_squares.extend(self.snake.tail)
+        m = self.create_matrix_repr() 
+        empty_squares = np.where(m == 0)
+        return np.asarray(empty_squares)
 
     def assign_direction(self, event):
         new_direction = event.keysym
@@ -256,6 +267,7 @@ class Snake:
         self.state = 0  #Switch it to true once the snake ate
 
     def increase_tail(self):
+        
         #list of unit coordinates
         #special case: only head
 
@@ -287,23 +299,28 @@ class Snake:
         return body
 
 class Food:
-    def __init__(self):
-        self.position = self.generate_food([])
+    def __init__(self, empty_squares):
+        self.position = self.generate_food(empty_squares) #TODO initial position 
 
     @staticmethod
-    def generate_food(occupied_squares):
-        x = [random.randrange(0,GRID_SIZE), random.randrange(0, GRID_SIZE)]
-        while True:
-            if x not in occupied_squares:
-                return Unit(x[0], x[1])
+    def generate_food(empty_squares):
+        l = empty_squares.shape[1]
+        
+        choice_index = np.random.choice(range(l)) 
+        choice_x = empty_squares[0][choice_index]
+        choice_y = empty_squares[1][choice_index]
 
-# Test function
-# def main():
-    # env = Environment()
-    # env.reset()
-    # while(env.game_state):
-        # env.update_environment(random.sample([0, 1, 2, 3], 1)[0])
-        # env.render(mode = "human")
+        return Unit(choice_x, choice_y)    
 
-# if __name__ == "__main__":
-    # main()
+
+
+# Test functionalities
+def main():
+    env = Environment()
+    env.reset()
+    while(env.game_state):
+        env.update_environment(random.sample([0, 1, 2, 3], 1)[0])
+        env.render(mode = "human")
+
+if __name__ == "__main__":
+    main()
