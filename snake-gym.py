@@ -50,9 +50,8 @@ class snake_gym(gym.Env):
             observation (object): the initial observation.
         """
         self.env.reset()
-        self.canvas = self.env.canvas
         self.done = False 
-        return self.canvas
+        return self.env.canvas 
     
     def step(self, action):
         """Run one timestep of the environment's dynamics. When end of
@@ -80,10 +79,10 @@ class snake_gym(gym.Env):
         elif status == 2:
             reward = 10
         info = {} #empty for now
-        return self.canvas, reward, self.done, info
+        return self.env.canvas, reward, self.done, info
 
     def render(self, mode = 'human'):
-        self.env.render(mode)
+        return self.env.render(mode)
     
     @property
     def unwrapped(self):
@@ -110,21 +109,19 @@ class snake_gym(gym.Env):
         return False
 
 # Test functionalities
-# def main():
-    # env = snake_gym()
+def main():
+    env = snake_gym()
     # init_obs = env.reset()
-
     # for i in range(1000):
         # if env.env.game_state <= 0:
             # print('\ngame over')
             # print('\n Iteration: {}'.format(i))
             # print('\n Game state: {}'.format(env.env.game_state))
             # print('\n Last coordinates: {}'.format(env.env.snake.head.as_list()))
-            # print()
+            # print(env.render(mode = 'rgb_array'))
 
             # break
         # env.step(env.action_space.sample())
-        # env.render('human')
 
-# if __name__ == '__main__':
-    # main()
+if __name__ == '__main__':
+    main()

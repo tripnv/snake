@@ -1,7 +1,6 @@
 import random
 import numpy as np
 import cv2
-from itertools import permutations
 
 action_space_dir = {
         "Up": (0,-1),
@@ -13,7 +12,7 @@ action_space_dir = {
 action_space_list = ["Up", "Down", "Left", "Right"]
 
 COLORS = {
-    "GRAY":(225,225,225),
+    "GRAY":(15, 115,0),
     "RED":(0,0,250),
     "LIME":(0,255,0),
     "GREEN":(0,128,0)
@@ -54,12 +53,13 @@ class Environment:
         super(Environment).__init__()
 
         #Environment attributes
-        self.gridsize = GRID_SIZE  
-        self.action_range = GRID_SIZE
-        self.unit_size = 10 #px
+        self.gs = GRID_SIZE
+        self.pseudo_gridsize = GRID_SIZE + 2 
+        self.action_range_limit = GRID_SIZE + 1  
+        self.unit_size = 50 #px
         self.unit_space = 0
         self.time_unit = 1
-        self.height = self.gridsize * self.unit_size
+        self.height = self.pseudo_gridsize * self.unit_size 
 
 
     def reset(self):
@@ -99,7 +99,7 @@ class Environment:
 
     def check_snake_state (self):
         #border check
-        if self.snake.head.x > self.action_range - 1  or self.snake.head.y > self.action_range - 1:
+        if self.snake.head.x > self.action_range_limit - 1  or self.snake.head.y > self.action_range_limit - 1:
             self.game_state = self.game_states['DEAD']
         elif self.snake.head.x < 1 or self.snake.head.y < 1:
             self.game_state = self.game_states['DEAD']
@@ -114,20 +114,29 @@ class Environment:
             self.food.position = self.food.generate_food(empty_squares)
             self.snake.increase_tail()
             self.game_state = self.game_states["ATE"]
-            if self.snake.length == self.gridsize * self.gridsize:
+            if self.snake.length == self.gs * self.gs :
                 self.game_state = self.game_states['WON']
 
     def draw_to_canvas(self):
+        self.draw_borders()
         self.draw_snake()
         self.draw_food()
 
-    def create_matrix_repr(self):
-        board = np.zeros((self.gridsize, self.gridsize), dtype = np.uint16)
-        #specify snake head 
+    def matrix_repr(self):
+        board = np.zeros((self.pseudo_gridsize, self.pseudo_gridsize), dtype = np.float32)
+        
+        board[-1:,:] = -1
+        board[:,-1:] = -1
+        board[:1,:] = -1
+        board[:,:1] = -1
+
         board[self.snake.head.x, self.snake.head.y] = 1
+        
+        i = 2
 
         for t_unit in self.snake.tail:
-            board[t_unit[0], t_unit[1]] = 2
+            board[t_unit[0], t_unit[1]] = i 
+            i += 1
         return board
 
     def render(self, mode = "ansi"):
@@ -159,64 +168,61 @@ class Environment:
             print("------------------")
 
 
-    # def draw_borders(self):
-        # #explicit borders has been removed
-        # x_index = 0
-        # y_index = 0
-        # while x_index < self.height:
+    def draw_borders(self):
+        
+        y_index = 0
+        for x_index in range(0, self.height, self.unit_size):
+            self.cavas = cv2.rectangle(
+                   self.canvas,
+                   (x_index,y_index),
+                   (x_index + self.unit_size, y_index + self.unit_size),
+                   color = COLORS["GRAY"], thickness = -1
+                   )
+            self.cavas = cv2.rectangle(
+                   self.canvas,
+                   (x_index,self.height - y_index),
+                   (x_index + self.unit_size, self.height - y_index - self.unit_size),
+                   color = COLORS["GRAY"], thickness = -1
+                  )
 
-            # self.cavas = cv2.rectangle(
-                   # self.canvas,
-                   # (x_index,y_index),
-                   # (x_index + self.unit_size, y_index + self.unit_size),
-                   # color = COLORS["GRAY"], thickness = -1
-                   # )
-            # self.cavas = cv2.rectangle(
-                   # self.canvas,
-                   # (x_index,self.height - y_index),
-                   # (x_index + self.unit_size, self.height - y_index - self.unit_size),
-                   # color = COLORS["GRAY"], thickness = -1
-                   # )
-            # x_index =  x_index + self.unit_size
-
-        # x_index = 0
-        # y_index = 0
-
-        # while x_index < self.height:
-            # self.cavas = cv2.rectangle(
-                   # self.canvas,
-                   # (x_index,y_index),
-                   # (x_index + self.unit_size, y_index + self.unit_size),
-                   # color = COLORS["GRAY"], thickness = -1
-                   # )
-            # self.cavas = cv2.rectangle(
-                   # self.canvas,
-                   # (self.height - x_index, y_index),
-                   # (self.height - x_index - self.unit_size, y_index + self.unit_size),
-                   # color = COLORS["GRAY"], thickness = -1)
-            # y_index = y_index + self.unit_size
+        x_index = 0
+        for y_index in range(0, self.height, self.unit_size):
+            self.cavas = cv2.rectangle(
+                   self.canvas,
+                   (x_index,y_index),
+                  (x_index + self.unit_size, y_index + self.unit_size),
+                   color = COLORS["GRAY"], thickness = -1
+                   )
+            self.cavas = cv2.rectangle(
+                   self.canvas,
+                   (self.height - x_index, y_index),
+                   (self.height - x_index - self.unit_size, y_index + self.unit_size),
+                   color = COLORS["GRAY"], thickness = -1)
 
 
 
     def draw_snake(self):
         #should include head and tail render
-        self.canvas = cv2.rectangle(
+        cv2.rectangle(
                 self.canvas,
                 (self.snake.head.x * self.unit_size + self.unit_space, self.snake.head.y * self.unit_size + self.unit_space),
                 (self.snake.head.x * self.unit_size + self.unit_size + self.unit_space, self.snake.head.y * self.unit_size + self.unit_size + self.unit_space),
                 color = COLORS["GREEN"], thickness = -1
                 )
+        cl = self.snake.length
+
+        
 
         if self.snake.length > 1:
             for unit in self.snake.tail:
-                self.canvas = cv2.rectangle(self.canvas,
+                cv2.rectangle(self.canvas,
                     (unit[0] * self.unit_size, unit[1] * self.unit_size),
                     (unit[0] * self.unit_size + self.unit_size, unit[1] * self.unit_size + self.unit_size),
                     color  = COLORS["LIME"], thickness = -1
                     )
 
     def draw_food(self):
-        self.canvas = cv2.rectangle(
+        cv2.rectangle(
                 self.canvas,
                 (self.food.position.x * self.unit_size, self.food.position.y * self.unit_size),
                 (self.food.position.x * self.unit_size + self.unit_size, self.food.position.y * self.unit_size + self.unit_size),
@@ -239,10 +245,8 @@ class Environment:
             return "Right"
 
     def get_empty_squares(self):
-        # occ_squares = []
-        # occ_squares.append(self.snake.head.as_list())
-        # occ_squares.extend(self.snake.tail)
-        m = self.create_matrix_repr() 
+        
+        m = self.matrix_repr() 
         empty_squares = np.where(m == 0)
         return np.asarray(empty_squares)
 
@@ -321,6 +325,6 @@ def main():
     while(env.game_state):
         env.update_environment(random.sample([0, 1, 2, 3], 1)[0])
         env.render(mode = "human")
-
+        print(env.matrix_repr())
 if __name__ == "__main__":
     main()
