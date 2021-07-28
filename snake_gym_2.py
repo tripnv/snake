@@ -7,7 +7,6 @@ import cv2
 
 
 
-
 class SnakeGym(gym.Env):
     
     """ Env guide from: https://github.com/openai/gym/blob/master/gym/core.py """ 
@@ -118,11 +117,31 @@ class SnakeGym(gym.Env):
         # propagate exception
         return False
 
+def keypress_to_direction(k, vb):
+    if k == 119:    
+        return 0 
+    
+    elif k == 100:
+        return 3 
+    
+    elif k == 115:
+        return 1 
+    
+    elif k == 97:
+        return 2 
+    
+    elif k == -1:
+        return vb  
+
+
+
 # Test functionalities
 def main():
     
+
     env = SnakeGym()
-    #if necessary reward_range can be modified
+    env.reset()
+
     alt_reward_range = {
         'alive':1,
         'died':-2,
@@ -132,15 +151,14 @@ def main():
     env.reward_range = alt_reward_range
     init_obs = env.reset()
     last_reward = -1
-    for i in range(100):
-        _, last_reward, _, _ =  env.step(env.action_space.sample())
-        env.render(mode = 'human')
-    
-    print('\n Iteration: {}'.format(i))
-    print('\n Game state: {}'.format(env.env.game_state))
-    print('\n Last coordinates: {}'.format(env.env.snake.head.as_list()))
-    print('\n Snake length:{}'.format(env.env.snake.length))
-    print('\n Last reward: {}'.format(last_reward))
+    kk = 0    
+    while env.env.game_state:
+        _, last_reward, _, _ = env.step(kk)
+        k = env.render('human')
+        value_before = kk
+        kk = keypress_to_direction(k, value_before)
+
+
 
 if __name__ == '__main__':
     main()
