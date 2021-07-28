@@ -1,6 +1,7 @@
 import random
 import numpy as np
 import cv2
+import colorsys
 
 action_space_dir = {
         "Up": (0,-1),
@@ -54,8 +55,8 @@ class Environment:
 
         #Environment attributes
         self.gs = GRID_SIZE
-        self.pseudo_gridsize = GRID_SIZE + 2 
-        self.action_range_limit = GRID_SIZE + 1  
+        self.pseudo_gridsize = GRID_SIZE  
+        self.action_range_limit = GRID_SIZE 
         self.unit_size = 50 #px
         self.unit_space = 0
         self.time_unit = 1
@@ -84,7 +85,7 @@ class Environment:
         self.canvas = np.ones((self.height, self.height, 3), dtype = np.float32)
         
         #choose direction
-        assert direction in self.action_space_ids, 'Invalid action'
+        assert direction in self.action_space_ids, 'Invalid action; Value received: {}'.format(direction)
         self.snake.direction = self.action_space_ids[direction]
         self.snake.update_snake()
         self.draw_to_canvas()
@@ -101,7 +102,7 @@ class Environment:
         #border check
         if self.snake.head.x > self.action_range_limit - 1  or self.snake.head.y > self.action_range_limit - 1:
             self.game_state = self.game_states['DEAD']
-        elif self.snake.head.x < 1 or self.snake.head.y < 1:
+        elif self.snake.head.x < 0 or self.snake.head.y < 0: 
             self.game_state = self.game_states['DEAD']
         #self check
         if [self.snake.head.x, self.snake.head.y] in self.snake.tail:
@@ -118,7 +119,6 @@ class Environment:
                 self.game_state = self.game_states['WON']
 
     def draw_to_canvas(self):
-        self.draw_borders()
         self.draw_snake()
         self.draw_food()
 
@@ -155,8 +155,9 @@ class Environment:
         
         if mode == 'human':
             cv2.imshow("canvas", self.canvas)
-            cv2.waitKey(100)
-
+            pressed_key = cv2.waitKey(500)   #TODO KEY presses should be recorded somewhere here
+            return pressed_key
+            
         elif mode == 'rgb_array':
             return self.canvas
 
@@ -170,7 +171,9 @@ class Environment:
 
     def draw_borders(self):
         
+        #If borders are initialized collision needs to be modified 
         y_index = 0
+
         for x_index in range(0, self.height, self.unit_size):
             self.cavas = cv2.rectangle(
                    self.canvas,
@@ -202,24 +205,26 @@ class Environment:
 
 
     def draw_snake(self):
-        #should include head and tail render
+        #includes head and tail render
+        N = self.snake.length
+        color_range = [(0,(100-i)*0.01,0) for i in range(N)]
         cv2.rectangle(
                 self.canvas,
                 (self.snake.head.x * self.unit_size + self.unit_space, self.snake.head.y * self.unit_size + self.unit_space),
                 (self.snake.head.x * self.unit_size + self.unit_size + self.unit_space, self.snake.head.y * self.unit_size + self.unit_size + self.unit_space),
-                color = COLORS["GREEN"], thickness = -1
+                color = color_range[0], thickness = -1
                 )
-        cl = self.snake.length
 
         
 
         if self.snake.length > 1:
+            color_idx = 1
             for unit in self.snake.tail:
                 cv2.rectangle(self.canvas,
                     (unit[0] * self.unit_size, unit[1] * self.unit_size),
                     (unit[0] * self.unit_size + self.unit_size, unit[1] * self.unit_size + self.unit_size),
-                    color  = COLORS["LIME"], thickness = -1
-                    )
+                    color  = color_range[color_idx], thickness = -1)
+                color_idx += 1
 
     def draw_food(self):
         cv2.rectangle(
@@ -304,7 +309,7 @@ class Snake:
 
 class Food:
     def __init__(self, empty_squares):
-        self.position = self.generate_food(empty_squares) #TODO initial position 
+        self.position = self.generate_food(empty_squares)
 
     @staticmethod
     def generate_food(empty_squares):
@@ -325,6 +330,5 @@ def main():
     while(env.game_state):
         env.update_environment(random.sample([0, 1, 2, 3], 1)[0])
         env.render(mode = "human")
-        print(env.matrix_repr())
 if __name__ == "__main__":
     main()
