@@ -155,7 +155,7 @@ class Environment:
         
         if mode == 'human':
             cv2.imshow("canvas", self.canvas)
-            pressed_key = cv2.waitKey(500)   #TODO KEY presses should be recorded somewhere here
+            pressed_key = cv2.waitKey(500)
             return pressed_key
             
         elif mode == 'rgb_array':
