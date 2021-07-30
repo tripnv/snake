@@ -57,7 +57,7 @@ class Environment:
         self.gs = GRID_SIZE
         self.pseudo_gridsize = GRID_SIZE  
         self.action_range_limit = GRID_SIZE 
-        self.unit_size = 50 #px
+        self.unit_size = 10 #px
         self.unit_space = 0
         self.time_unit = 1
         self.height = self.pseudo_gridsize * self.unit_size 
