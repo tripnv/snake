@@ -38,9 +38,9 @@ class SnakeGym(gym.Env):
         self.env = snake_2.Environment()
         self.observation_shape = (self.env.height, self.env.height,3)   
         self.observation_space = gym.spaces.Box(low = 0,
-                high = 255,
+                high = 1,
                 shape = self.observation_shape,
-                dtype = np.uint8)
+                dtype = np.float32)
         self.action_space = gym.spaces.Discrete(4)
         self.reset()
     
@@ -118,9 +118,10 @@ class SnakeGym(gym.Env):
         return False
 
 def keypress_to_direction(k, vb):
+
     if k == 119:    
         return 0 
-    
+
     elif k == 100:
         return 3 
     
@@ -150,6 +151,8 @@ def main():
         }
     env.reward_range = alt_reward_range
     init_obs = env.reset()
+    print(init_obs.shape)
+    print(init_obs.dtype)
     last_reward = -1
     kk = 0    
     while env.env.game_state:
