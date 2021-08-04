@@ -12,6 +12,8 @@ action_space_dir = {
 
 action_space_list = ["Up", "Down", "Left", "Right"]
 
+GRID_SIZE = 10
+
 COLORS = {
     "GRAY":(15, 115,0),
     "RED":(0,0,250),
@@ -19,7 +21,7 @@ COLORS = {
     "GREEN":(0,128,0)
         }
 
-GRID_SIZE = 10
+
 
 class Unit:
 
@@ -45,6 +47,15 @@ class Environment:
         "ATE":2,
         "ALIVE":1,
         "DEAD":0,
+        }
+
+    eus = int(GRID_SIZE/5)
+    dir_to_eye_position = {
+        #x1,y1, x2, y2
+        "Up": (-eus, -eus, eus, -eus),
+        "Down":(-eus, eus, eus, eus),
+        "Left":(-eus, eus, -eus, -eus),
+        "Right":(eus, -eus, eus, eus),
         }
 
     metadata = {'render.modes': ['human', 'rgb_array', 'ansi']}
@@ -206,6 +217,7 @@ class Environment:
 
     def draw_snake(self):
         #includes head and tail render
+        #head should be more distinguishable 
         N = self.snake.length
         color_range = [(0,(100-i)*0.01,0) for i in range(N)]
         cv2.rectangle(
@@ -214,7 +226,14 @@ class Environment:
                 (self.snake.head.x * self.unit_size + self.unit_size + self.unit_space, self.snake.head.y * self.unit_size + self.unit_size + self.unit_space),
                 color = color_range[0], thickness = -1
                 )
-
+        #draw_eyes
+        eye_pos = self.dir_to_eye_position[self.snake.direction]
+        cv2.circle(self.canvas,  
+                (self.snake.head.x * self.unit_size + self.unit_space + int(self.unit_size/2) + eye_pos[0], self.snake.head.y * self.unit_size + self.unit_space + int(self.unit_size/2) + eye_pos[1]),
+                1, COLORS['RED'], thickness=1)
+        cv2.circle(self.canvas,  
+                (self.snake.head.x * self.unit_size + self.unit_space + int(self.unit_size/2) + eye_pos[2], self.snake.head.y * self.unit_size + self.unit_space + int(self.unit_size/2) + eye_pos[3]),
+                1, COLORS['RED'], thickness=1)
         
 
         if self.snake.length > 1:
@@ -323,12 +342,11 @@ class Food:
 
 
 
-# Test functionalities
-def main():
+if __name__ == "__main__":
     env = Environment()
     env.reset()
+
     while(env.game_state):
         env.update_environment(random.sample([0, 1, 2, 3], 1)[0])
         env.render(mode = "human")
-if __name__ == "__main__":
-    main()
+
