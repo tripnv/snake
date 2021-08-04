@@ -137,9 +137,7 @@ def keypress_to_direction(k, vb):
 
 
 # Test functionalities
-def main():
-    
-
+if __name__ == '__main__':
     env = SnakeGym()
     env.reset()
 
@@ -151,8 +149,6 @@ def main():
         }
     env.reward_range = alt_reward_range
     init_obs = env.reset()
-    print(init_obs.shape)
-    print(init_obs.dtype)
     last_reward = -1
     kk = 0    
     while env.env.game_state:
@@ -163,5 +159,4 @@ def main():
 
 
 
-if __name__ == '__main__':
-    main()
+
