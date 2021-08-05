@@ -95,6 +95,7 @@ class Environment:
         
         self.canvas = np.ones((self.height, self.height, 3), dtype = np.float32)
         
+        self.check_food_collision()
         #choose direction
         assert direction in self.action_space_ids, 'Invalid action; Value received: {}'.format(direction)
         self.snake.direction = self.action_space_ids[direction]
@@ -105,7 +106,6 @@ class Environment:
         #check game_state: border, running into itself 
         self.check_snake_state()
         #check eating  
-        self.check_food_collision()
         
         return self.game_state 
 
@@ -130,8 +130,9 @@ class Environment:
                 self.game_state = self.game_states['WON']
 
     def draw_to_canvas(self):
-        self.draw_snake()
+
         self.draw_food()
+        self.draw_snake()
 
     def matrix_repr(self):
         board = np.zeros((self.pseudo_gridsize, self.pseudo_gridsize), dtype = np.float32)
