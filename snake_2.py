@@ -95,7 +95,6 @@ class Environment:
         
         self.canvas = np.ones((self.height, self.height, 3), dtype = np.float32)
         
-        self.check_food_collision()
         #choose direction
         assert direction in self.action_space_ids, 'Invalid action; Value received: {}'.format(direction)
         self.snake.direction = self.action_space_ids[direction]
@@ -103,9 +102,9 @@ class Environment:
         self.draw_to_canvas()
         
         self.game_state = self.game_states['ALIVE']
-        #check game_state: border, running into itself 
         self.check_snake_state()
         #check eating  
+        self.check_food_collision()
         
         return self.game_state 
 
