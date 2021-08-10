@@ -133,13 +133,14 @@ class Environment:
         self.draw_food()
         self.draw_snake()
 
-    def matrix_repr(self):
+    def matrix_repr(self, border = False):
         board = np.zeros((self.pseudo_gridsize, self.pseudo_gridsize), dtype = np.float32)
         
-        board[-1:,:] = -1
-        board[:,-1:] = -1
-        board[:1,:] = -1
-        board[:,:1] = -1
+        if border:
+            board[-1:,:] = -1
+            board[:,-1:] = -1
+            board[:1,:] = -1
+            board[:,:1] = -1
 
         board[self.snake.head.x, self.snake.head.y] = 1
         
