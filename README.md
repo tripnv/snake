@@ -7,6 +7,6 @@ This small project started as a friendly argument about the capabilities of RL a
 The principal goal of this endeavor is to train an RL agent that can win at snake._.
 
 ### 15.08
-![] (https://github.com/tripnv/snake/blob/main/snake-august.gif)
+![] (snake-august.gif)
 
 Current highscore: 98
