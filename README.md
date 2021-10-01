@@ -8,5 +8,5 @@ The principal goal of this endeavor is to train an RL agent that can win at snak
 
 ### 15.08
 <img align="left" width="100" height="100" src="https://github.com/tripnv/snake/blob/main/snake-august.gif">
-
+<br>
 Current highscore: 98
